@@ -23,11 +23,21 @@ def decision_step(Rover):
     obstacle_right = np.count_nonzero(front_bumper) > 1
     # conditional var, if obstacle is up ahead and to the right
     extended_front_far = Rover.vision_image[130:142, 159:170, 0]
-    extended_front_near = Rover.vision_image[142:147, 159:165, 0]
+    extended_front_near = Rover.vision_image[142:147, 159:167, 0]
     front_clear = (np.count_nonzero(extended_front_far) == 0 and
                     np.count_nonzero(extended_front_near) == 0)
     # conditional var, if Rover has a good angle to come out of stop mode
     good_angle = Rover.mean_ang < 0.2 and Rover.mean_ang > -0.2
+
+    # Rover should go home when mission accomplished and near starting position
+    dist_home = np.sqrt((Rover.pos[0] - Rover.start_pos[0])**2 +
+                        (Rover.pos[1] - Rover.start_pos[1])**2)
+    if Rover.head_home == True and dist_home <= 4:
+        Rover.mode = 'direct_home'
+
+    # coordinates of home relative to Rover position and yaw
+    home_x, home_y = rover_centric(Rover.start_pos[0], Rover.start_pos[1],
+                                    Rover.pos[0], Rover.pos[1], Rover.yaw)
 
     # Use warped top-down map to detect rock
     rock_nearby = False
@@ -142,30 +152,64 @@ def decision_step(Rover):
             Rover.steer = 0
             Rover.brake = 1
             Rover.mode = 'init_rock_stop'
-        elif Rover.near_sample:
+        if Rover.vel > 0.5:
+            Rover.brake = 0
+            Rover.throttle = 0
+        else:
+            Rover.brake = 0
+            Rover.throttle = 0.5
+        if rock_aligned:
+            Rover.steer = 0
+        elif rock_center <= 159:
+            Rover.steer = 2
+        elif rock_center >= 160:
+            Rover.steer = -2
+        if Rover.near_sample:
             Rover.throttle = 0
             Rover.brake = 1
             Rover.mode = 'stop'
-        elif Rover.vel > 0.5:
+    # Tell Rover to head home
+    elif Rover.mode == 'direct_home':
+        if Rover.vel > 0.0:
+            Rover.steer = 0
+            Rover.throttle = 0
+            Rover.brake = Rover.brake_set
+        else:
+            Rover.throttle = 0
+            Rover.brake = 0
+            if home_y > 0.1:
+                Rover.steer = 2
+            elif home_y < -0.1:
+                Rover.steer = -2
+            else:
+                Rover.steer = 0
+                Rover.mode = 'go_home'
+    elif Rover.mode = 'go_home':
+        if Rover.vel > 0.5:
             Rover.brake = 0
             Rover.throttle = 0
-            if rock_aligned:
-                Rover.steer = 0
-            elif rock_center <= 159:
-                Rover.steer = 2
-            elif rock_center >= 160:
-                Rover.steer = -2
-        elif Rover.vel <= 0.5:
+        else:
             Rover.brake = 0
             Rover.throttle = 0.5
-            if rock_aligned:
-                Rover.steer = 0
-            elif rock_center <= 159:
-                Rover.steer = 2
-            elif rock_center >= 160:
-                Rover.steer = -2
-    # Just to make the rover do something
-    # even if no modifications have been made to the code
+        if home_y > 0.1:
+            Rover.steer = 2
+        elif home_y < -0.1:
+            Rover.steer = -2
+        if dist_home <= 0.1:
+            Rover.throttle = 0
+            Rover.brake = 1
+            Rover.steer = 0
+            Rover.mode = 'finished'
+    elif Rover.mode = 'finished':
+        if Rover.vel > 0.0:
+            Rover.brake = 1
+            Rover.steer = 0
+            Rover.throttle = 0
+        else:
+            Rover.brake = 0
+            Rover.steer = 0
+            Rover.throttle = 0
+    # If no vision data available, enter failsafe mode
     elif Rover.mode == 'failsafe':
         if Rover.vel > 0.0:
             Rover.brake = Rover.brake_set
@@ -182,3 +226,10 @@ def decision_step(Rover):
         Rover.send_pickup = True
 
     return Rover
+
+def rover_centric(world_x, world_y, rover_x, rover_y, yaw):
+    yaw_rad = yaw * np.pi / 180
+    translated_x, translated_y = world_x - rover_x, world_y - rover_y
+    rotated_x = translated_x * np.cos(yaw_rad) + translated_y * np.sin(yaw_rad)
+    rotated_y = -translated_x * np.sin(yaw_rad) + translated_y * np.cos(yaw_rad)
+    return rotated_x, rotated_y

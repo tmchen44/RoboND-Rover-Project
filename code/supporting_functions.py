@@ -121,6 +121,8 @@ def create_output_images(Rover):
       tot_map_pix = np.float(len((Rover.ground_truth[:,:,1].nonzero()[0])))
       # Calculate the percentage of ground truth map that has been successfully found
       perc_mapped = round(100*good_nav_pix/tot_map_pix, 1)
+      if perc_mapped >= 95:
+          Rover.head_home = True
       # Calculate the number of good map pixel detections divided by total pixels
       # found to be navigable terrain
       if tot_nav_pix > 0:
