@@ -125,18 +125,19 @@ def perception_step(Rover):
                   [image.shape[1]/2 + dst_size - 1, image.shape[0] - 2*dst_size - bottom_offset],
                   [image.shape[1]/2 - dst_size, image.shape[0] - 2*dst_size - bottom_offset],
                   ])
-    # 2) Apply perspective transform
+    # 2) Apply perspective transform to image
     warped = perspect_transform(image, source, destination)
     warped[152:,:,:] = 0
-    # 3) Apply color threshold to identify navigable terrain/obstacles/rock samples
+    # 3) Apply color threshold to identify navigable terrain/obstacles/rock
+    #    samples in warped image
     nav_binary = color_thresh(warped)
     obs_binary = obs_thresh(warped)
     rock_binary = rock_thresh(warped)
-    # 4) Update Rover.vision_image (this will be displayed on left side of screen)
+    # 4) Update Rover.vision_image (to be displayed on left side of screen)
     Rover.vision_image[:,:,0] = obs_binary * 255
     Rover.vision_image[:,:,1] = rock_binary * 255
     Rover.vision_image[:,:,2] = nav_binary * 255
-    # 5) Convert map image pixel values to rover-centric coords
+    # 5) Convert map image pixel values to rover-centric coordinates
     nav_x_rov, nav_y_rov = rover_coords(nav_binary)
     obs_x_rov, obs_y_rov = rover_coords(obs_binary)
     rock_x_rov, rock_y_rov = rover_coords(rock_binary)
@@ -148,17 +149,15 @@ def perception_step(Rover):
     rock_x_world, rock_y_world = pix_to_world(rock_x_rov, rock_y_rov, Rover.pos[0],
                                             Rover.pos[1], Rover.yaw, 200, 10)
     # 7) Update Rover worldmap (to be displayed on right side of screen)
+    #    if roll and pitch are within tolerances
     roll = Rover.roll
     pitch = Rover.pitch
-    if (roll < 0.5 or roll > 359.5) and (pitch < 0.5 or pitch > 359.5):
+    if (roll < 0.4 or roll > 359.6) and (pitch < 0.4 or pitch > 359.6):
         Rover.worldmap[obs_y_world, obs_x_world, 0] += 1
         Rover.worldmap[rock_y_world, rock_x_world, 1] += 1
         Rover.worldmap[nav_y_world, nav_x_world, 2] += 1
-    # 8) Convert rover-centric pixel positions to polar coordinates
-    # Update Rover pixel distances and angles
-    dists, angles = to_polar_coords(nav_x_rov, nav_y_rov)
-    Rover.nav_dists, Rover.nav_angles = dists, angles
-    Rover.local_mean_ang = np.mean(angles[dists < 20])
-    Rover.mean_dist, Rover.mean_ang = np.mean(dists), np.mean(angles)
+    # 8) Convert rover-centric pixel positions to polar coordinates, and
+    #    update Rover pixel distances and angles
+    Rover.nav_dists, Rover.nav_angles = to_polar_coords(nav_x_rov, nav_y_rov)
 
     return Rover

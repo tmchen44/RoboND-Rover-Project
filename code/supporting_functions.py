@@ -150,10 +150,10 @@ def create_output_images(Rover):
       pil_img.save(buff, format="JPEG")
       encoded_string1 = base64.b64encode(buff.getvalue()).decode("utf-8")
 
-      cv2.putText(Rover.vision_image, "Mean Angle: {:.4}".format(Rover.mean_ang),
-                  (0, 10), cv2.FONT_HERSHEY_COMPLEX, 0.4, (255, 255, 255), 1)
-      cv2.putText(Rover.vision_image, "Mean Dist: {:.4}".format(Rover.mean_dist),
-                  (0, 25), cv2.FONT_HERSHEY_COMPLEX, 0.4, (255, 255, 255), 1)
+    #   cv2.putText(Rover.vision_image, "Mean Angle: {:.4}".format(Rover.mean_ang),
+    #               (0, 10), cv2.FONT_HERSHEY_COMPLEX, 0.4, (255, 255, 255), 1)
+    #   cv2.putText(Rover.vision_image, "Mean Dist: {:.4}".format(Rover.mean_dist),
+    #               (0, 25), cv2.FONT_HERSHEY_COMPLEX, 0.4, (255, 255, 255), 1)
       cv2.putText(Rover.vision_image, "Steering: {}".format(Rover.steer),
                   (0, 40), cv2.FONT_HERSHEY_COMPLEX, 0.4, (255, 255, 255), 1)
       cv2.putText(Rover.vision_image, "Throttle: {}".format(Rover.throttle),
