@@ -11,28 +11,25 @@ def decision_step(Rover):
 
     # Rover center start (row, col) = (150, 159-160)
     # Variables to be used in making decisions
-    mean_dist = np.mean(Rover.nav_dists)
-    mean_ang = np.mean(Rover.nav_angles)
-    local_mean_ang = np.mean(Rover.nav_angles[Rover.nav_dists < 35])
-    # stopping distance conditional var
-    within_stop_dist = mean_dist <= Rover.stop_forward
+    # Stopping distance conditional var
+    within_stop_dist = Rover.mean_dist <= Rover.stop_forward
     # navigable terrain conditional var
     navigable_terr = len(Rover.nav_dists) > 0
     # conditional var, if obstacle is in front of Rover bumper
-    front_bumper = Rover.vision_image[141:148, 156:163, 0]
-    obstacle_in_way = np.count_nonzero(front_bumper) >= 10
+    front_bumper = Rover.vision_image[141:148, 157:162, 0]
+    obstacle_in_way = np.count_nonzero(front_bumper) >= 8
     # conditional vars, if obstacles are in wheel path of Rover
     front_left = Rover.vision_image[138:149, 150:155, 0]
     obstacle_left = np.count_nonzero(front_left) > 0
     front_right = Rover.vision_image[138:148, 164:167, 0]
     obstacle_right = np.count_nonzero(front_right) > 0
     # conditional var, if obstacle is up ahead and to the right
-    extended_front_far = Rover.vision_image[120:141, 160:164, 0]
-    extended_front_near = Rover.vision_image[142:147, 159:168, 0]
+    extended_front_far = Rover.vision_image[118:139, 163:170, 0]
+    extended_front_near = Rover.vision_image[140:147, 159:170, 0]
     front_clear = (np.count_nonzero(extended_front_far) == 0 and
                     np.count_nonzero(extended_front_near) == 0)
     # conditional var, if Rover has a good angle to come out of stop mode
-    good_angle = -0.1 < local_mean_ang < 0.1
+    good_angle = -0.1 < Rover.local_mean_ang < 0.1
 
     # Rover should go home when mission accomplished and near starting position
     dist_home = np.sqrt((Rover.pos[0] - Rover.start_pos[0])**2 +
@@ -46,12 +43,12 @@ def decision_step(Rover):
     rock_nearby = False
     rock_aligned = False
     rock_map = Rover.vision_image[:,:,1]
-    if np.count_nonzero(rock_map) > 3:
+    if np.count_nonzero(rock_map) > 0:
         row_dists = np.nonzero(rock_map)[0] - 159
         col_dists = np.nonzero(rock_map)[1] - 159.5
         dists = np.sqrt(row_dists**2 + col_dists**2)
-        avg_x = np.mean(row_dists[dists <= 32])
-        avg_y = np.mean(col_dists[dists <= 32])
+        avg_x = np.mean(row_dists[dists <= 28])
+        avg_y = np.mean(col_dists[dists <= 28])
         if avg_x < 0 and avg_y >= -5:
             rock_nearby = True
     if Rover.picking_up != 0:
@@ -89,9 +86,10 @@ def decision_step(Rover):
             if front_clear:
                 Rover.steer = -8
             elif obstacle_left:
-                mean_ang_right = np.mean(Rover.nav_angles[Rover.nav_angles < 0.26])
+                mean_ang_right = np.mean(Rover.nav_angles[Rover.nav_angles <= 0])
+                Rover.steer = np.clip(mean_ang_right, -15, 15)
             else:
-                Rover.steer = np.clip(local_mean_ang * 180/np.pi, -15, 15)
+                Rover.steer = np.clip(Rover.mean_ang * 180/np.pi, -15, 12)
         # If there's a lack of navigable terrain pixels then go to 'stop' mode
         else:
             # Set mode to "stop" and hit the brakes!
@@ -112,7 +110,7 @@ def decision_step(Rover):
         # If we're not moving (vel < 0.2) then do something else
         else:
             # Now we're stopped and we have vision data to see if there's a path forward
-            if (mean_dist < Rover.go_forward or not navigable_terr
+            if (Rover.mean_dist < Rover.go_forward or not navigable_terr
                 or obstacle_in_way or not good_angle):
                 Rover.throttle = 0
                 # Release the brake to allow turning
@@ -126,7 +124,7 @@ def decision_step(Rover):
                 # Release the brake
                 Rover.brake = 0
                 # Set steer to mean angle
-                Rover.steer = np.clip(local_mean_ang * 180/np.pi, -10, 10)
+                Rover.steer = np.clip(Rover.local_mean_ang * 180/np.pi, -10, 10)
                 Rover.mode = 'forward'
     # Attempt to recover rock
     elif Rover.mode == 'init_rock_stop':
