@@ -21,8 +21,6 @@ def decision_step(Rover):
     # conditional vars, if obstacles are in wheel path of Rover
     front_left = Rover.vision_image[138:149, 150:155, 0]
     obstacle_left = np.count_nonzero(front_left) > 0
-    front_right = Rover.vision_image[138:148, 164:167, 0]
-    obstacle_right = np.count_nonzero(front_right) > 0
     # conditional var, if obstacle is up ahead and to the right
     extended_front_far = Rover.vision_image[118:139, 163:170, 0]
     extended_front_near = Rover.vision_image[140:147, 159:170, 0]
