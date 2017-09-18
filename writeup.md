@@ -50,23 +50,23 @@ Link here to my Jupyter Notebook: [./code/Rover\_Project\_Test\_Notebook.ipynb](
 * The obstacle detection function `obs_thresh` can be found immediately below `color_thresh`. It is very similar to `color_thresh` and identifies parts of the image that are *below* the RGB threshold. `obs_thresh` also ignores the black "empty" parts of the warped perspective (which are not obstacles, but the space beyond the edges of the camera). **Figure 2** below shows the resulting warped image (`example_grid1.jpg` in the `calibration_images` folder) of obstacles.
 * The rock detection function `rock thresh` can be found immediately below `obs_thresh`. It uses the HSV color system to identify yellow rock samples in the rover camera images. A couple of OpenCV functions are used to convert from RGB to HSV and to threshold the image for a range of HSV values. **Figure 3** shows the original rock sample image (last image of my own test dataset, located at `test_dataset_tc/IMG`). **Figure 4** shows the color thresholded image with the original camera perspective, and **Figure 5** shows the thresholded image with the warped perspective.
 
-**Figure 1**:
+**Figure 1**
 
 ![alt text][image01]
 
-**Figure 2**:
+**Figure 2**
 
 ![alt text][image02]
 
-**Figure 3**:
+**Figure 3**
 
 ![alt text][image03]
 
-**Figure 4**:
+**Figure 4**
 
 ![alt text][image04]
 
-**Figure 5**:
+**Figure 5**
 
 ![alt text][image05]
 
@@ -108,6 +108,7 @@ For the most part, this strategy does an excellent job of going through most of 
 In particular, there are large rocks in the middle of the map that have parts that jut into the air. These rocks cause the rover to become stuck when it tries to pass underneath. Why does the rover try to pass underneath? The perception techniques are only able to accurately range obstacles that go all the way to the ground. Because these obstacles are "above ground" per se, my perception functions cannot accurately show these obstacles on the map (see **Figure 6**). Hence, the rover thinks the path is clear when, in reality, the path is not clear. The rock usually then catches onto the rover arm and causes the rover to become stuck.
 
 **Figure 6**
+
 ![alt text][image06]
 
 In order to avoid becoming stuck against a rock, I extended the forward detection zone mentioned above (line 27) so as to help the rover avoid these larger rocks that stick out in the air. Now, the rover is able to avoid these large rocks; at the same time, however, instead of following small rightward branches off the main path, it tends to skip these small branches and continue on the main path (see **Figure 7**).
