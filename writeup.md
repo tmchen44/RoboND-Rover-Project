@@ -72,10 +72,11 @@ Link here to my Jupyter Notebook: [./code/Rover\_Project\_Test\_Notebook.ipynb](
 
 #### 2. Populate the `process_image()` function with the appropriate analysis steps to map pixels identifying navigable terrain, obstacles and rock samples into a worldmap.  Run `process_image()` on your test data using the `moviepy` functions provided to create video output of your result. 
 
-1. To generate a top-down map for image analysis as well as a world map, I first defined the source and destination points for the perspective transform.
-2. Then I apply the `perspect_transform` function to the camera image from the rover to get a warped, top-down view.
-3. I apply the three color thresholds to identify navigable terrain, obstacles, and rock samples. These are stored as three binary images.
-4. I then take these three images and convert them to rover-centric coordinates using the `rover_coords` function, which is defined in the *Coordinate Transformations* section of the notebook.
+To generate a top-down map for image analysis as well as a world map:
+1. First, define the source and destination points for the perspective transform.
+2. Then, apply the `perspect_transform` function to the camera image from the rover to get a warped, top-down view.
+3. Apply the three color thresholds to identify navigable terrain, obstacles, and rock samples. These are stored as three binary images.
+4. Take these three images and convert them to rover-centric coordinates using the `rover_coords` function, which is defined in the *Coordinate Transformations* section of the notebook.
 5. These rover-centric coordinates are converted to world coordinates using the `pix_to_world` function, which is also defined in the *Coordinate Transformations* section of the notebook.
 6. If the Rover roll and pitch are within a certain range, then the worldmap is updated with the coordinates of the navigable terrain, obstacles, and rock samples.
 7. A mosaic of several image series are stitched together to create a movie (link below). Starting from the top left and continuing clockwise:
@@ -90,6 +91,8 @@ Link to video:
 ### Autonomous Navigation and Mapping
 
 #### 1. Fill in the `perception_step()` (at the bottom of the `perception.py` script) and `decision_step()` (in `decision.py`) functions in the autonomous mapping scripts and an explanation is provided in the writeup of how and why these functions were modified as they were.
+
+Link to code [here](./code).
 
 The `perception_step()` function is organized very similarly to the `process_image()` function (see  the above explanation for more details). However, instead of stitching the resulting images into a movie, `perception_step()` passes these images as instance variables of the Rover class instance. `Rover.vision_image` contains the warped perspective camera image with color thresholding applied (red for obstacles, blue for navigable terrain, and yellow for rock samples). `Rover.worldmap` is updated with the generated worldmap. Also, variables containing the rover-centric polar distances and angles, with their respective means, are passed to the Rover class instance as well.
 
