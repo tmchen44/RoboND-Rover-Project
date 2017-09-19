@@ -36,6 +36,9 @@ def obs_thresh(img, rgb_thresh=(160, 160, 160)):
     return obs_select
 
 def rock_thresh(img):
+    # Note: Most of the code within this function was taken from OpenCV's
+    # tutorial on 'Changing Colorspaces', then adapted to isolate the rock
+    # sample colors.
     # Convert RGB to HSV
     hsv = cv2.cvtColor(img, cv2.COLOR_RGB2HSV)
 
